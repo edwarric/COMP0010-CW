@@ -9,6 +9,7 @@ public class Vehicle {
     }
 
     public static Vehicle withRegistration(String registration) {
+        //returns the vehicle with given registration
         return new Vehicle(registration);
     }
 

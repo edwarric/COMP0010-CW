@@ -8,15 +8,19 @@ public class CongestionChargeSystem {
     public static final BigDecimal CHARGE_RATE_POUNDS_PER_MINUTE = new BigDecimal(0.05);
 
     private final List<ZoneBoundaryCrossing> eventLog = new ArrayList<ZoneBoundaryCrossing>();
+    //is a list of vehicles and their timestamps (entry/exit)
 
     public void vehicleEnteringZone(Vehicle vehicle) {
+        //adds the vehicle object and its entry time to list
         eventLog.add(new EntryEvent(vehicle));
     }
 
     public void vehicleLeavingZone(Vehicle vehicle) {
         if (!previouslyRegistered(vehicle)) {
+            //unregistered vehicles are ignored
             return;
         }
+        //adds vehicle and its exit time to list
         eventLog.add(new ExitEvent(vehicle));
     }
 
@@ -25,6 +29,7 @@ public class CongestionChargeSystem {
         Map<Vehicle, List<ZoneBoundaryCrossing>> crossingsByVehicle = new HashMap<Vehicle, List<ZoneBoundaryCrossing>>();
 
         for (ZoneBoundaryCrossing crossing : eventLog) {
+            //Finds vehicle in list
             if (!crossingsByVehicle.containsKey(crossing.getVehicle())) {
                 crossingsByVehicle.put(crossing.getVehicle(), new ArrayList<ZoneBoundaryCrossing>());
             }
@@ -38,7 +43,7 @@ public class CongestionChargeSystem {
             if (!checkOrderingOf(crossings)) {
                 OperationsTeam.getInstance().triggerInvestigationInto(vehicle);
             } else {
-
+                //calls calculation function
                 BigDecimal charge = calculateChargeForTimeInZone(crossings);
 
                 try {
@@ -82,17 +87,20 @@ public class CongestionChargeSystem {
     }
 
     private boolean checkOrderingOf(List<ZoneBoundaryCrossing> crossings) {
-
+        //method finds the last occurrings event.
         ZoneBoundaryCrossing lastEvent = crossings.get(0);
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
             if (crossing.timestamp() < lastEvent.timestamp()) {
+                //the last event should have a greater timestamp.
                 return false;
             }
             if (crossing instanceof EntryEvent && lastEvent instanceof EntryEvent) {
+                //both time stamps shouldn't be entry events
                 return false;
             }
             if (crossing instanceof ExitEvent && lastEvent instanceof ExitEvent) {
+                //both time stamps shouldn't be exit events
                 return false;
             }
             lastEvent = crossing;
