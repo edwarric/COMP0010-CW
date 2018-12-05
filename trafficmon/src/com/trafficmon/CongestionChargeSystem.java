@@ -2,6 +2,7 @@ package com.trafficmon;
 
 import java.math.BigDecimal;
 import java.util.*;
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 public class CongestionChargeSystem {
 
@@ -14,6 +15,11 @@ public class CongestionChargeSystem {
         //adds the vehicle object and its entry time to list
         eventLog.add(new EntryEvent(vehicle));
     }
+    public void vehicleEnteringZone(Vehicle vehicle, Clock clock){
+        //adds the vehicle object and its entry time to list
+        eventLog.add(new EntryEvent(vehicle, clock));
+    }
+
 
     public void vehicleLeavingZone(Vehicle vehicle) {
         if (!previouslyRegistered(vehicle)) {
@@ -22,6 +28,19 @@ public class CongestionChargeSystem {
         }
         //adds vehicle and its exit time to list
         eventLog.add(new ExitEvent(vehicle));
+    }
+
+    public void vehicleLeavingZone(Vehicle vehicle, Clock clock) {
+        if (!previouslyRegistered(vehicle)) {
+            //unregistered vehicles are ignored
+            return;
+        }
+        //adds vehicle and its exit time to list
+        eventLog.add(new ExitEvent(vehicle, clock));
+    }
+
+    public List getEventlog(){
+        return eventLog;
     }
 
     public void calculateCharges() {
@@ -67,7 +86,7 @@ public class CongestionChargeSystem {
 
             if (crossing instanceof ExitEvent) {
                 charge = charge.add(
-                        new BigDecimal(minutesBetween(lastEvent.timestamp(), crossing.timestamp()))
+                        new BigDecimal(MINUTES.between(lastEvent.timestamp(), crossing.timestamp()))
                                 .multiply(CHARGE_RATE_POUNDS_PER_MINUTE));
             }
 
@@ -91,7 +110,7 @@ public class CongestionChargeSystem {
         ZoneBoundaryCrossing lastEvent = crossings.get(0);
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
-            if (crossing.timestamp() < lastEvent.timestamp()) {
+            if (crossing.timestamp().compareTo(lastEvent.timestamp()) < 0) {
                 //the last event should have a greater timestamp.
                 return false;
             }
