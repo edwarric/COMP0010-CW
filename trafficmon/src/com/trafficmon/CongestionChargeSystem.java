@@ -97,11 +97,11 @@ public class CongestionChargeSystem {
     }
 
     private boolean previouslyRegistered(Vehicle vehicle) {
-        for (ZoneBoundaryCrossing crossing : eventLog) {
+        for (ZoneBoundaryCrossing crossing : eventLog)
             if (crossing.getVehicle().equals(vehicle)) {
                 return true;
             }
-        }
+
         return false;
     }
 
@@ -126,10 +126,6 @@ public class CongestionChargeSystem {
         }
 
         return true;
-    }
-
-    private int minutesBetween(long startTimeMs, long endTimeMs) {
-        return (int) Math.ceil((endTimeMs - startTimeMs) / (1000.0 * 60.0));
     }
 
 }

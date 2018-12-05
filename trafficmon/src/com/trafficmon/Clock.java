@@ -1,7 +1,7 @@
 package com.trafficmon;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 public interface Clock {
-    LocalTime now();
+    LocalDateTime now();
 }

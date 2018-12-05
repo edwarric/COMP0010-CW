@@ -1,11 +1,11 @@
 package com.trafficmon;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 public abstract class ZoneBoundaryCrossing {
 
     private final Vehicle vehicle;
-    private final LocalTime time;
+    private final LocalDateTime time;
     private final Clock clock;
 
     public ZoneBoundaryCrossing(Vehicle vehicle) {
@@ -26,7 +26,7 @@ public abstract class ZoneBoundaryCrossing {
         return vehicle;
     }
 
-    public LocalTime timestamp() {
+    public LocalDateTime timestamp() {
         return time;
     }
 }

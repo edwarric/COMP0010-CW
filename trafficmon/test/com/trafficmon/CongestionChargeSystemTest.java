@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -31,15 +31,18 @@ public class CongestionChargeSystemTest {
         assertTrue(CCSystem.getEventlog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
         assertThat(CCSystem.getEventlog().size(), is(0));
+        clock.currentTimeIs(1, 15, 20);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
+        assertThat(CCSystem.getEventlog().size(), is(0));
     }
     
     @Test
     public void unregisteredVehiclesShouldReceivePenaltyNotice() {
         System.setOut(ps);
         
-        clock.currentTimeIs(11,00);
+        clock.currentTimeIs(1,11, 00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A987 XYZ"), clock);
-        clock.currentTimeIs(12,30);
+        clock.currentTimeIs(1,12,30);
         
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
         CCSystem.calculateCharges();
@@ -51,39 +54,76 @@ public class CongestionChargeSystemTest {
         System.setOut(ps);
         
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
-        delayMinutes(1);
+        delayMinutes(0);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
         CCSystem.calculateCharges();
         
-        assertThat(os.toString(), containsString("£0.05 deducted"));
+        assertThat(os.toString(), containsString("£0.00 deducted"));
     }
-    
-    @Test
-    public void registeredVehiclesChargedCorrectlyUsingSystemClock(){
-        System.setOut(ps);
-        
-        clock.currentTimeIs(15,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
-        clock.currentTimeIs(15,30);
 
+    @Test
+    public void notEnoughCreditShouldFacePenalty(){
+        System.setOut(ps);
+
+        clock.currentTimeIs(1,00,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(2,16,59);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-        
-        //Legacy system should charge £1.50 deducted for 30 minutes (£0.05 per min)
-        assertThat(os.toString(), containsString("£1.50 deducted"));
+
+        assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A123 XYZ]"));
     }
+
+    @Test
+    public void triggerInvestigationForUnorderdLog(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,14,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1,12,00);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+
+        assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
+                "vehicle: Vehicle [A123 XYZ]"));
+    }
+
+    @Test
+    public void doubleEntry(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,12,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+
+        assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
+                "vehicle: Vehicle [A123 XYZ]"));
+    }
+
+    @Test
+    public void doubleExit(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,12,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+
+        assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
+                "vehicle: Vehicle [A123 XYZ]"));
+    }
+
     
     private class ControllableClock implements Clock{
 
-        private LocalTime now;
+        private LocalDateTime now;
 
         @Override
-        public LocalTime now() {
+        public LocalDateTime now() {
             return now;
         }
 
-        public void currentTimeIs(int hour, int min){
-            now = LocalTime.of(hour, min);
+        public void currentTimeIs(int day, int hour, int min){
+            now = LocalDateTime.of(0,1, day, hour, min,0,0);
         }
         
     }
