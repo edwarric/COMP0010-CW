@@ -67,9 +67,7 @@ public class CongestionChargeSystem {
 
                 try {
                     RegisteredCustomerAccountsService.getInstance().accountFor(vehicle).deduct(charge);
-                } catch (InsufficientCreditException ice) {
-                    OperationsTeam.getInstance().issuePenaltyNotice(vehicle, charge);
-                } catch (AccountNotRegisteredException e) {
+                } catch (InsufficientCreditException | AccountNotRegisteredException e) {
                     OperationsTeam.getInstance().issuePenaltyNotice(vehicle, charge);
                 }
             }
@@ -110,16 +108,8 @@ public class CongestionChargeSystem {
         ZoneBoundaryCrossing lastEvent = crossings.get(0);
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
-            if (crossing.timestamp().compareTo(lastEvent.timestamp()) < 0) {
-                //the last event should have a greater timestamp.
-                return false;
-            }
-            if (crossing instanceof EntryEvent && lastEvent instanceof EntryEvent) {
-                //both time stamps shouldn't be entry events
-                return false;
-            }
-            if (crossing instanceof ExitEvent && lastEvent instanceof ExitEvent) {
-                //both time stamps shouldn't be exit events
+            //the last event should have a greater timestamp || both time stamps shouldn't be entry events || both time stamps shouldn't be exit events
+            if ((crossing.timestamp().compareTo(lastEvent.timestamp()) < 0) || (crossing instanceof EntryEvent && lastEvent instanceof EntryEvent) || (crossing instanceof ExitEvent && lastEvent instanceof ExitEvent)) {
                 return false;
             }
             lastEvent = crossing;
