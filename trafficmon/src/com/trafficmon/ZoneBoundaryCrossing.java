@@ -8,12 +8,6 @@ public abstract class ZoneBoundaryCrossing {
     private final LocalDateTime time;
     private final Clock clock;
 
-    public ZoneBoundaryCrossing(Vehicle vehicle) {
-        this.vehicle = vehicle;
-        this.clock = new SystemClock();
-        this.time = clock.now();
-    }
-
     public ZoneBoundaryCrossing(Vehicle vehicle, Clock clock){
         this.vehicle = vehicle;
         this.clock = clock;

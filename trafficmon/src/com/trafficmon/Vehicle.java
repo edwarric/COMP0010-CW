@@ -25,10 +25,7 @@ public class Vehicle {
 
         Vehicle vehicle = (Vehicle) o;
 
-        if (registration != null ? !registration.equals(vehicle.registration) : vehicle.registration != null)
-            return false;
-
-        return true;
+        return registration != null ? registration.equals(vehicle.registration) : vehicle.registration == null;
     }
 
     @Override
