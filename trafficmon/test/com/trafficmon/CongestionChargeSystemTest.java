@@ -37,13 +37,19 @@ public class CongestionChargeSystemTest {
     }
     
     @Test
+    public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock() {
+        clock.currentTimeIs(1, 15, 20);
+        assertTrue(CCSystem.getEventlog().isEmpty());
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
+        assertThat(CCSystem.getEventlog().size(), is(0));
+    }
+    
+    @Test
     public void unregisteredVehiclesShouldReceivePenaltyNotice() {
         System.setOut(ps);
-        
         clock.currentTimeIs(1,11, 00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A987 XYZ"), clock);
         clock.currentTimeIs(1,12,30);
-        
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
         CCSystem.calculateCharges();
         assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A987 XYZ]"));
@@ -52,62 +58,55 @@ public class CongestionChargeSystemTest {
     @Test
     public void registeredVehiclesChargedCorrectly() throws InterruptedException {
         System.setOut(ps);
-        
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
         delayMinutes(0);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
         CCSystem.calculateCharges();
-        
-        assertThat(os.toString(), containsString("£0.00 deducted"));
+        assertThat(os.toString(), containsString("£0.00 deducted"));   // NOTE: change to 1 min, 0.05 deducted
     }
 
     @Test
     public void notEnoughCreditShouldFacePenalty(){
         System.setOut(ps);
-
         clock.currentTimeIs(1,00,00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         clock.currentTimeIs(2,16,59);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-
         assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A123 XYZ]"));
     }
 
     @Test
-    public void triggerInvestigationForUnorderdLog(){
+    public void unorderedVehicleLogShouldTriggerInvestigation(){
         System.setOut(ps);
         clock.currentTimeIs(1,14,00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         clock.currentTimeIs(1,12,00);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-
         assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
                 "vehicle: Vehicle [A123 XYZ]"));
     }
 
     @Test
-    public void doubleEntry(){
+    public void duplicateVehicleEntryShouldTriggerInvestigation(){
         System.setOut(ps);
         clock.currentTimeIs(1,12,00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-
         assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
                 "vehicle: Vehicle [A123 XYZ]"));
     }
 
     @Test
-    public void doubleExit(){
+    public void duplicateVehicleExitShouldTriggerInvestigation(){
         System.setOut(ps);
         clock.currentTimeIs(1,12,00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-
         assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
                 "vehicle: Vehicle [A123 XYZ]"));
     }

@@ -10,7 +10,7 @@ public abstract class ZoneBoundaryCrossing {
 
     public ZoneBoundaryCrossing(Vehicle vehicle) {
         this.vehicle = vehicle;
-        clock = new SystemClock();
+        this.clock = new SystemClock();
         this.time = clock.now();
     }
 
@@ -19,8 +19,7 @@ public abstract class ZoneBoundaryCrossing {
         this.clock = clock;
         this.time = clock.now();
     }
-
-
+    
 
     public Vehicle getVehicle() {
         return vehicle;

@@ -109,7 +109,9 @@ public class CongestionChargeSystem {
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
             //the last event should have a greater timestamp || both time stamps shouldn't be entry events || both time stamps shouldn't be exit events
-            if ((crossing.timestamp().compareTo(lastEvent.timestamp()) < 0) || (crossing instanceof EntryEvent && lastEvent instanceof EntryEvent) || (crossing instanceof ExitEvent && lastEvent instanceof ExitEvent)) {
+            if ((crossing.timestamp().compareTo(lastEvent.timestamp()) < 0) ||
+               (crossing instanceof EntryEvent && lastEvent instanceof EntryEvent) ||
+               (crossing instanceof ExitEvent && lastEvent instanceof ExitEvent)) {
                 return false;
             }
             lastEvent = crossing;
