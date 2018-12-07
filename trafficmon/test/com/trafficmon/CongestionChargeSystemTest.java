@@ -24,6 +24,8 @@ public class CongestionChargeSystemTest {
         assertTrue(CCSystem.getEventlog().isEmpty());
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
         assertThat(CCSystem.getEventlog().size(), is(1));
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
+        assertThat(CCSystem.getEventlog().size(), is(2));
     }
     
     @Test
@@ -31,8 +33,7 @@ public class CongestionChargeSystemTest {
         assertTrue(CCSystem.getEventlog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
         assertThat(CCSystem.getEventlog().size(), is(0));
-        clock.currentTimeIs(1, 15, 20);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
         assertThat(CCSystem.getEventlog().size(), is(0));
     }
     
@@ -54,16 +55,20 @@ public class CongestionChargeSystemTest {
         CCSystem.calculateCharges();
         assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A987 XYZ]"));
     }
-    
+
     @Test
-    public void registeredVehiclesChargedCorrectly() throws InterruptedException {
+    public void registeredVehicleChargedTheCorrectCharge(){
         System.setOut(ps);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
-        delayMinutes(0);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
+        clock.currentTimeIs(1,13,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1, 16, 00);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-        assertThat(os.toString(), containsString("£0.00 deducted"));   // NOTE: change to 1 min, 0.05 deducted
+
+        assertThat(os.toString(), containsString("£9.00 deducted"));
     }
+
+
 
     @Test
     public void notEnoughCreditShouldFacePenalty(){

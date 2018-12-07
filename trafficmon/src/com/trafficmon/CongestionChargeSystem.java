@@ -50,13 +50,16 @@ public class CongestionChargeSystem {
         for (ZoneBoundaryCrossing crossing : eventLog) {
             //Finds vehicle in list
             if (!crossingsByVehicle.containsKey(crossing.getVehicle())) {
+                //stores each vehicle that has an activity once.
                 crossingsByVehicle.put(crossing.getVehicle(), new ArrayList<ZoneBoundaryCrossing>());
             }
             crossingsByVehicle.get(crossing.getVehicle()).add(crossing);
         }
 
         for (Map.Entry<Vehicle, List<ZoneBoundaryCrossing>> vehicleCrossings : crossingsByVehicle.entrySet()) {
+            //iterates through every vehicle stored in crossingsByVehicle
             Vehicle vehicle = vehicleCrossings.getKey();
+            //Stores all activities of 'vehicle in crossings'
             List<ZoneBoundaryCrossing> crossings = vehicleCrossings.getValue();
 
             if (!checkOrderingOf(crossings)) {
@@ -67,22 +70,31 @@ public class CongestionChargeSystem {
 
                 try {
                     RegisteredCustomerAccountsService.getInstance().accountFor(vehicle).deduct(charge);
-                } catch (InsufficientCreditException | AccountNotRegisteredException e) {
-                    OperationsTeam.getInstance().issuePenaltyNotice(vehicle, charge);
-                }
+                } catch (InsufficientCreditException | AccountNotRegisteredException e){
+                    OperationsTeam.getInstance().issuePenaltyNotice(vehicle, charge); }
             }
         }
     }
 
     private BigDecimal calculateChargeForTimeInZone(List<ZoneBoundaryCrossing> crossings) {
+        //calculates charge for single vehicle for all of its activities
 
         BigDecimal charge = new BigDecimal(0);
+
+        //lastEvent starts as an entryEvent
+        //crossings should be an exitEvent else theres a bug.
+        //after an iteration, lastEvent becomes the exitEvent and crossings becomes the next EntryEvent
+        //if the vehicle re-enters. else, the loop ends.
 
         ZoneBoundaryCrossing lastEvent = crossings.get(0);
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
 
             if (crossing instanceof ExitEvent) {
+                //lastEvent = entryevent
+                if (lastEvent.timestamp().getHour() < 14){
+
+                }
                 charge = charge.add(
                         new BigDecimal(MINUTES.between(lastEvent.timestamp(), crossing.timestamp()))
                                 .multiply(CHARGE_RATE_POUNDS_PER_MINUTE));
