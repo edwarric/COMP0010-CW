@@ -13,11 +13,11 @@ public class CongestionChargeSystem {
 
     public void vehicleEnteringZone(Vehicle vehicle) {
         //adds the vehicle object and its entry time to list
-        eventLog.add(new EntryEvent(vehicle, new SystemClock()));
+        eventLog.add(ZoneBoundaryCrossingFactory.getZoneCrossing("Entry", vehicle, new SystemClock()));
     }
     public void vehicleEnteringZone(Vehicle vehicle, Clock clock){
         //adds the vehicle object and its entry time to list
-        eventLog.add(new EntryEvent(vehicle, clock));
+        eventLog.add(ZoneBoundaryCrossingFactory.getZoneCrossing("Entry", vehicle, clock));
     }
 
 
@@ -27,7 +27,7 @@ public class CongestionChargeSystem {
             return;
         }
         //adds vehicle and its exit time to list
-        eventLog.add(new ExitEvent(vehicle, new SystemClock()));
+        eventLog.add(ZoneBoundaryCrossingFactory.getZoneCrossing("Exit", vehicle, new SystemClock()));
     }
 
     public void vehicleLeavingZone(Vehicle vehicle, Clock clock) {
@@ -36,7 +36,7 @@ public class CongestionChargeSystem {
             return;
         }
         //adds vehicle and its exit time to list
-        eventLog.add(new ExitEvent(vehicle, clock));
+        eventLog.add(ZoneBoundaryCrossingFactory.getZoneCrossing("Exit", vehicle, clock));
     }
 
     public List getEventlog(){
