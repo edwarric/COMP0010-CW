@@ -48,12 +48,14 @@ public class CongestionChargeSystem {
         Map<Vehicle, List<ZoneBoundaryCrossing>> crossingsByVehicle = new HashMap<Vehicle, List<ZoneBoundaryCrossing>>();
 
         for (ZoneBoundaryCrossing crossing : eventLog) {
+            Vehicle vehicle = crossing.getVehicle();
+
             //Finds vehicle in list
-            if (!crossingsByVehicle.containsKey(crossing.getVehicle())) {
+            if (!crossingsByVehicle.containsKey(vehicle)) {
                 //stores each vehicle that has an activity once.
-                crossingsByVehicle.put(crossing.getVehicle(), new ArrayList<ZoneBoundaryCrossing>());
+                crossingsByVehicle.put(vehicle, new ArrayList<ZoneBoundaryCrossing>());
             }
-            crossingsByVehicle.get(crossing.getVehicle()).add(crossing);
+            crossingsByVehicle.get(vehicle).add(crossing);
         }
 
         for (Map.Entry<Vehicle, List<ZoneBoundaryCrossing>> vehicleCrossings : crossingsByVehicle.entrySet()) {
