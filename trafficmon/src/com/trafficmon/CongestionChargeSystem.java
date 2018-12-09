@@ -81,38 +81,44 @@ public class CongestionChargeSystem {
     }
 
     private BigDecimal calculateChargeForTimeInZone(List<ZoneBoundaryCrossing> crossings) {
-        //calculates charge for single vehicle for all of its activities
-
         BigDecimal charge = new BigDecimal(0);
         
-        LocalDateTime canReturnBefore = LocalDateTime.of(0,1,1,0,0);
-        boolean vehicleReturnedForFree = false;
-        LocalDateTime entryTime = null;
-
+        LocalDateTime returnBeforeTime = LocalDateTime.of(0,1,1,0,0);
+        LocalDateTime entryTime = null, exitTime;
+        boolean canReturnForFree = false;
+        
         for (ZoneBoundaryCrossing crossing : crossings) {
     
             if (crossing instanceof EntryEvent) {
                 entryTime = crossing.timestamp();
-                if (entryTime.compareTo(canReturnBefore) > 0) {
-                    vehicleReturnedForFree = false;
+                if (!earlierThan(entryTime, returnBeforeTime)) {
+                    canReturnForFree = false;
                 }
-                if (!vehicleReturnedForFree) {
-                    canReturnBefore = entryTime.plusHours(4);
+                if (!canReturnForFree) {
+                    returnBeforeTime = entryTime.plusHours(4);
                 }
             } else {
-                if ((crossing.timestamp().compareTo(canReturnBefore) < 0) && !vehicleReturnedForFree) {
+                exitTime = crossing.timestamp();
+                if (earlierThan(exitTime, returnBeforeTime) && !canReturnForFree) {
                     if (entryTime.getHour() < 14) {
                         charge = charge.add(new BigDecimal(6));
                     } else {
                         charge = charge.add(new BigDecimal(4));
                     }
-                    vehicleReturnedForFree = true;
-                } else if (crossing.timestamp().compareTo(canReturnBefore) >= 0) {
+                    canReturnForFree = true;
+                } else if (!earlierThan(exitTime, returnBeforeTime)) {
                     charge = charge.add(new BigDecimal(12));
                 }
             }
         }
         return charge;
+    }
+    
+    private boolean earlierThan(LocalDateTime t1, LocalDateTime t2) {
+        if (t1.compareTo(t2) < 0) {
+            return true;
+        }
+        return false;
     }
 
     private boolean previouslyRegistered(Vehicle vehicle) {
