@@ -55,7 +55,18 @@ public class CongestionChargeSystemTest {
         CCSystem.calculateCharges();
         assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A987 XYZ]"));
     }
-
+    
+    @Test
+    public void registeredVehicleOverstays(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,9,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1, 18, 30);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+        assertThat(os.toString(), containsString("£12.00 deducted"));
+    }
+    
     @Test
     public void registeredVehicleRevisitsAndOverstays(){
         System.setOut(ps);
@@ -68,19 +79,40 @@ public class CongestionChargeSystemTest {
         clock.currentTimeIs(1, 14, 00);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
-
         assertThat(os.toString(), containsString("£18.00 deducted"));
     }
-
-
+    
+    @Test
+    public void registeredVehicleVisitsAndLeavesBefore2(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,10,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1, 13, 00);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+        assertThat(os.toString(), containsString("£6.00 deducted"));
+    }
+    
+    @Test
+    public void registeredVehicleVisitsAndLeavesAfter2(){
+        System.setOut(ps);
+        clock.currentTimeIs(1,15,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1, 18, 00);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        CCSystem.calculateCharges();
+        assertThat(os.toString(), containsString("£4.00 deducted"));
+    }
 
     @Test
     public void notEnoughCreditShouldFacePenalty(){
         System.setOut(ps);
-        clock.currentTimeIs(1,00,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
-        clock.currentTimeIs(2,16,59);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        for (int i=1; i<10; i++) {
+            clock.currentTimeIs(i,00,00);
+            CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+            clock.currentTimeIs(i,12,00);
+            CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        }
         CCSystem.calculateCharges();
         assertThat(os.toString(), containsString("Penalty notice for: Vehicle [A123 XYZ]"));
     }

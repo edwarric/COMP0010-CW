@@ -105,7 +105,6 @@ public class CongestionChargeSystem {
                         lastEvent = crossing;
                         continue;
                     }
-
                     else{
                         //shouldn't be charged, left before already paid 4 hours.
                     }
@@ -152,9 +151,7 @@ public class CongestionChargeSystem {
                 else{
                     vehicleReturnedForFree = false;
                 }
-
             }
-
             lastEvent = crossing;
         }
         return charge;
