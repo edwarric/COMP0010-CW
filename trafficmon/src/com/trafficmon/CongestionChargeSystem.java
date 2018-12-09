@@ -91,7 +91,7 @@ public class CongestionChargeSystem {
         //if the vehicle re-enters. else, the loop ends.
 
         ZoneBoundaryCrossing lastEvent = crossings.get(0);
-        LocalDateTime canReturnBefore = lastEvent.timestamp().plusHours(4);
+        LocalDateTime canReturnBefore = null;
         boolean vehicleReturnedForFree = false;
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
@@ -100,12 +100,14 @@ public class CongestionChargeSystem {
                 if (vehicleReturnedForFree){
                     //wont run on first loop
                     if (crossing.timestamp().compareTo(canReturnBefore) > 0){
-                        charge.add(new BigDecimal(12));
+                        charge = charge.add(new BigDecimal(12));
                         vehicleReturnedForFree = false;
+                        lastEvent = crossing;
+                        continue;
                     }
 
                     else{
-                        //shouldnt be charged, left before already paid 4 hours.
+                        //shouldn't be charged, left before already paid 4 hours.
                     }
                 }
                 else {
@@ -116,32 +118,33 @@ public class CongestionChargeSystem {
                     //entry after 2pm
                     if (HOURS.between(lastEvent.timestamp(), crossing.timestamp()) < 4 && !vehicleReturnedForFree){
                         //exit less than 4 hours, can re-enter for remaining time for free
-                        charge.add(new BigDecimal(4));
+                        charge = charge.add(new BigDecimal(6));
                     }
                     else if (vehicleReturnedForFree){
                         //No charge.
                     }
                     else{
                         //stayed Longer than 4 hours = PENALTY
-                        charge.add(new BigDecimal(12));
+                        charge = charge.add(new BigDecimal(12));
                     }
                 }
                 else{
                     //entry after 2pm
                     if (HOURS.between(lastEvent.timestamp(), crossing.timestamp()) < 4 && !vehicleReturnedForFree){
                         //exit less than 4 hours, can re-enter for remaining time for free
-                        charge.add(new BigDecimal(4));
+                        charge = charge.add(new BigDecimal(4));
                     }
                     else if (vehicleReturnedForFree){
                         //No charge.
                     }
                     else{
                         //stayed Longer than 4 hours = PENALTY
-                        charge.add(new BigDecimal(12));
+                        charge = charge.add(new BigDecimal(12));
                     }
                 }
             }
             else{
+
                 //crossing = next entry     lastEvent = previous exit
                 if (canReturnBefore.compareTo(crossing.timestamp()) > 0){
                     vehicleReturnedForFree = true;
@@ -154,7 +157,6 @@ public class CongestionChargeSystem {
 
             lastEvent = crossing;
         }
-
         return charge;
     }
 

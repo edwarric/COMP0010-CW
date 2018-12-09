@@ -57,15 +57,19 @@ public class CongestionChargeSystemTest {
     }
 
     @Test
-    public void registeredVehicleChargedTheCorrectCharge(){
+    public void registeredVehicleRevisitsAndOverstays(){
         System.setOut(ps);
-        clock.currentTimeIs(1,13,00);
+        clock.currentTimeIs(1,9,00);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
-        clock.currentTimeIs(1, 16, 00);
+        clock.currentTimeIs(1, 9, 30);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1,11,00);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
+        clock.currentTimeIs(1, 14, 00);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.calculateCharges();
 
-        assertThat(os.toString(), containsString("£9.00 deducted"));
+        assertThat(os.toString(), containsString("£18.00 deducted"));
     }
 
 
