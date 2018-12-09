@@ -84,75 +84,33 @@ public class CongestionChargeSystem {
         //calculates charge for single vehicle for all of its activities
 
         BigDecimal charge = new BigDecimal(0);
-
-        //lastEvent starts as an entryEvent
-        //crossings should be an exitEvent else theres a bug.
-        //after an iteration, lastEvent becomes the exitEvent and crossings becomes the next EntryEvent
-        //if the vehicle re-enters. else, the loop ends.
-
-        ZoneBoundaryCrossing lastEvent = crossings.get(0);
-        LocalDateTime canReturnBefore = null;
+        
+        LocalDateTime canReturnBefore = LocalDateTime.of(0,1,1,0,0);
         boolean vehicleReturnedForFree = false;
+        LocalDateTime entryTime = null;
 
-        for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
-
-            if (crossing instanceof ExitEvent) {
-                if (vehicleReturnedForFree){
-                    //wont run on first loop
-                    if (crossing.timestamp().compareTo(canReturnBefore) > 0){
-                        charge = charge.add(new BigDecimal(12));
-                        vehicleReturnedForFree = false;
-                        lastEvent = crossing;
-                        continue;
-                    }
-                    else{
-                        //shouldn't be charged, left before already paid 4 hours.
-                    }
-                }
-                else {
-                    canReturnBefore = lastEvent.timestamp().plusHours(4);
-                }
-                //lastEvent = entryevent
-                if (lastEvent.timestamp().getHour() < 14){
-                    //entry after 2pm
-                    if (HOURS.between(lastEvent.timestamp(), crossing.timestamp()) < 4 && !vehicleReturnedForFree){
-                        //exit less than 4 hours, can re-enter for remaining time for free
-                        charge = charge.add(new BigDecimal(6));
-                    }
-                    else if (vehicleReturnedForFree){
-                        //No charge.
-                    }
-                    else{
-                        //stayed Longer than 4 hours = PENALTY
-                        charge = charge.add(new BigDecimal(12));
-                    }
-                }
-                else{
-                    //entry after 2pm
-                    if (HOURS.between(lastEvent.timestamp(), crossing.timestamp()) < 4 && !vehicleReturnedForFree){
-                        //exit less than 4 hours, can re-enter for remaining time for free
-                        charge = charge.add(new BigDecimal(4));
-                    }
-                    else if (vehicleReturnedForFree){
-                        //No charge.
-                    }
-                    else{
-                        //stayed Longer than 4 hours = PENALTY
-                        charge = charge.add(new BigDecimal(12));
-                    }
-                }
-            }
-            else{
-
-                //crossing = next entry     lastEvent = previous exit
-                if (canReturnBefore.compareTo(crossing.timestamp()) > 0){
-                    vehicleReturnedForFree = true;
-                }
-                else{
+        for (ZoneBoundaryCrossing crossing : crossings) {
+    
+            if (crossing instanceof EntryEvent) {
+                entryTime = crossing.timestamp();
+                if (entryTime.compareTo(canReturnBefore) > 0) {
                     vehicleReturnedForFree = false;
                 }
+                if (!vehicleReturnedForFree) {
+                    canReturnBefore = entryTime.plusHours(4);
+                }
+            } else {
+                if ((crossing.timestamp().compareTo(canReturnBefore) < 0) && !vehicleReturnedForFree) {
+                    if (entryTime.getHour() < 14) {
+                        charge = charge.add(new BigDecimal(6));
+                    } else {
+                        charge = charge.add(new BigDecimal(4));
+                    }
+                    vehicleReturnedForFree = true;
+                } else if (crossing.timestamp().compareTo(canReturnBefore) >= 0) {
+                    charge = charge.add(new BigDecimal(12));
+                }
             }
-            lastEvent = crossing;
         }
         return charge;
     }
