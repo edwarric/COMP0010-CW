@@ -20,25 +20,25 @@ public class CongestionChargeSystemTest {
 
     @Test
     public void newEventShouldRegisterInLog() {
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
-        assertThat(CCSystem.getEventlog().size(), is(1));
+        assertThat(CCSystem.getEventLog().size(), is(1));
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
-        assertThat(CCSystem.getEventlog().size(), is(2));
+        assertThat(CCSystem.getEventLog().size(), is(2));
     }
     
     @Test
     public void exitingUnregisteredVehiclesShouldBeIgnored() {
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
     }
     
     @Test
     public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock() {
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
-        assertThat(CCSystem.getEventlog().size(), is(0));
+        assertThat(CCSystem.getEventLog().size(), is(0));
     }
     
     @Test
@@ -51,7 +51,7 @@ public class CongestionChargeSystemTest {
     }
     
     @Test
-    public void registeredVehicleOverstays(){
+    public void registeredVehicleOverstays() {
         System.setOut(ps);
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -62,7 +62,7 @@ public class CongestionChargeSystemTest {
     }
     
     @Test
-    public void registeredVehicleRevisitsAndOverstays(){
+    public void registeredVehicleRevisitsAndOverstays() {
         System.setOut(ps);
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -77,7 +77,7 @@ public class CongestionChargeSystemTest {
     }
     
     @Test
-    public void registeredVehicleVisitsAndLeavesBefore2(){
+    public void registeredVehicleVisitsAndLeavesBefore2() {
         System.setOut(ps);
         clock.setHour(10);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -88,7 +88,7 @@ public class CongestionChargeSystemTest {
     }
     
     @Test
-    public void registeredVehicleVisitsAndLeavesAfter2(){
+    public void registeredVehicleVisitsAndLeavesAfter2() {
         System.setOut(ps);
         clock.setHour(15);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -99,7 +99,7 @@ public class CongestionChargeSystemTest {
     }
 
     @Test
-    public void notEnoughCreditShouldFacePenalty(){
+    public void notEnoughCreditShouldFacePenalty() {
         System.setOut(ps);
         for (int i=1; i<20; i+=2) {
             clock.setDay(i);
@@ -112,7 +112,7 @@ public class CongestionChargeSystemTest {
     }
 
     @Test
-    public void unorderedVehicleLogShouldTriggerInvestigation(){
+    public void unorderedVehicleLogShouldTriggerInvestigation() {
         System.setOut(ps);
         clock.setHour(14);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -124,7 +124,7 @@ public class CongestionChargeSystemTest {
     }
 
     @Test
-    public void duplicateVehicleEntryShouldTriggerInvestigation(){
+    public void duplicateVehicleEntryShouldTriggerInvestigation() {
         System.setOut(ps);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -134,7 +134,7 @@ public class CongestionChargeSystemTest {
     }
 
     @Test
-    public void duplicateVehicleExitShouldTriggerInvestigation(){
+    public void duplicateVehicleExitShouldTriggerInvestigation() {
         System.setOut(ps);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"), clock);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"), clock);
@@ -143,5 +143,4 @@ public class CongestionChargeSystemTest {
         assertThat(os.toString(), containsString("Mismatched entries/exits. Triggering investigation into " +
                 "vehicle: Vehicle [A123 XYZ]"));
     }
-
 }

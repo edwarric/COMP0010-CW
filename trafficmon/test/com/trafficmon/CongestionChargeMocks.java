@@ -1,6 +1,5 @@
 package com.trafficmon;
 
-
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
@@ -20,36 +19,35 @@ public class CongestionChargeMocks {
     ControllableClock clock = new ControllableClock();
     Account account = new Account("Fehed", Vehicle.withRegistration("A102 ABC"), new BigDecimal(0));
 
-
     @Test
-    public void newEventShouldRegisterInLog(){
-        assertTrue(CCSystem.getEventlog().isEmpty());
+    public void newEventShouldRegisterInLog() {
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
-        assertThat(CCSystem.getEventlog().size(), is(1));
+        assertThat(CCSystem.getEventLog().size(), is(1));
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
-        assertThat(CCSystem.getEventlog().size(), is(2));
+        assertThat(CCSystem.getEventLog().size(), is(2));
     }
 
     @Test
-    public void exitingUnregisteredVehiclesShouldBeIgnored(){
-        assertTrue(CCSystem.getEventlog().isEmpty());
+    public void exitingUnregisteredVehiclesShouldBeIgnored() {
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
     }
 
     @Test
-    public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock(){
-        assertTrue(CCSystem.getEventlog().isEmpty());
+    public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock() {
+        assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
-        assertTrue(CCSystem.getEventlog().isEmpty());
+        assertTrue(CCSystem.getEventLog().isEmpty());
     }
 
     @Test
-    public void unregisteredVehiclesShouldReceivePenaltyNotice(){
+    public void unregisteredVehiclesShouldReceivePenaltyNotice() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("ASDFGHJK"), new BigDecimal(6));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("ASDFGHJK"),
+                                                                      new BigDecimal(6));
         }});
-
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("ASDFGHJK"), clock);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("ASDFGHJK"), clock);
@@ -59,9 +57,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void registeredVehicleOverstays(){
+    public void registeredVehicleOverstays() {
       context.checking(new Expectations() {{
-          exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(12));
+          exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                            new BigDecimal(12));
       }});
       clock.setHour(9);
       CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -71,9 +70,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void registeredVehicleRevisitsAndOverstays(){
+    public void registeredVehicleRevisitsAndOverstays() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(18));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(18));
         }});
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -87,9 +87,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void registeredVehicleVisitsAndLeavesBefore2(){
+    public void registeredVehicleVisitsAndLeavesBefore2() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(6));
         }});
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -99,9 +100,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void registeredVehicleVisitsAndLeavesAfter2(){
+    public void registeredVehicleVisitsAndLeavesAfter2() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(4));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(4));
         }});
         clock.setHour(15);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -111,9 +113,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void registeredVehicleVisitsBeforeAndAfter2(){
+    public void registeredVehicleVisitsBeforeAndAfter2() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(10));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(10));
         }});
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -127,9 +130,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void notEnoughCreditShouldFacePenalty(){
+    public void notEnoughCreditShouldFacePenalty() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(6));
         }});
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -139,9 +143,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void vehicleReEnteredWithoutSecondCharge(){
+    public void vehicleReEnteredWithoutSecondCharge() {
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"),
+                                                                              new BigDecimal(6));
         }});
         clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
@@ -155,7 +160,7 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void unorderedVehicleLogShouldTriggerInvestigation(){
+    public void unorderedVehicleLogShouldTriggerInvestigation() {
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
         }});
@@ -167,11 +172,10 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void duplicateVehicleEntryShouldTriggerInvestigation(){
+    public void duplicateVehicleEntryShouldTriggerInvestigation() {
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
         }});
-
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.calculateCharges(penaltiesService);
@@ -179,15 +183,13 @@ public class CongestionChargeMocks {
     }
 
     @Test
-    public void duplicateVehicleExitShouldTriggerInvestigation(){
+    public void duplicateVehicleExitShouldTriggerInvestigation() {
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
         }});
-
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.calculateCharges(penaltiesService);
     }
-
 }
