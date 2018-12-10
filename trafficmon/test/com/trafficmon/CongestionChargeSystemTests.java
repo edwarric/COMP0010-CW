@@ -11,7 +11,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
 
-public class CongestionChargeSystemTest {
+public class CongestionChargeSystemTests {
 
     private CongestionChargeSystem CCSystem = new CongestionChargeSystem();
     private ControllableClock clock = new ControllableClock();

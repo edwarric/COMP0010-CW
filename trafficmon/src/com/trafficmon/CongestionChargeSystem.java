@@ -74,7 +74,7 @@ public class CongestionChargeSystem {
         LocalDateTime entryTime = null, exitTime;
 
         for (ZoneBoundaryCrossing crossing : crossings) {
-            if (crossing instanceof EntryEvent) {
+            if (crossing.type().equals("entry") ) {
                 entryTime = crossing.timestamp();
                 if (!earlierThan(entryTime, returnBeforeTime)) {
                     canReturnForFree = false;
@@ -86,16 +86,22 @@ public class CongestionChargeSystem {
                 exitTime = crossing.timestamp();
                 if (earlierThan(exitTime, returnBeforeTime) && !canReturnForFree) {
                     assert entryTime != null;
-                    if (entryTime.getHour() < 14) {
-                        charge = charge.add(new BigDecimal(6));
-                    } else {
-                        charge = charge.add(new BigDecimal(4));
-                    }
+                    charge = decideCharge(entryTime.getHour(), charge);
                     canReturnForFree = true;
                 } else if (!earlierThan(exitTime, returnBeforeTime)) {
                     charge = charge.add(new BigDecimal(12));
                 }
             }
+        }
+        return charge;
+    }
+
+    private BigDecimal decideCharge(int time, BigDecimal charge) {
+        if(time < 14){
+            charge = charge.add(new BigDecimal(6));
+        }
+        else{
+            charge = charge.add(new BigDecimal(4));
         }
         return charge;
     }
@@ -114,12 +120,15 @@ public class CongestionChargeSystem {
 
     private boolean checkOrderingOf(List<ZoneBoundaryCrossing> crossings) {
         ZoneBoundaryCrossing previousEvent = crossings.get(0);
+        String crossingType, prevCrossingType;
 
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
-            // the last event should have a greater timestamp || both timestamps shouldn't be entry events || both timestamps shouldn't be exit events
+            crossingType = crossing.type();
+            prevCrossingType = previousEvent.type();
+
             if (earlierThan(crossing.timestamp(), previousEvent.timestamp()) ||
-               (crossing instanceof EntryEvent && previousEvent instanceof EntryEvent) ||
-               (crossing instanceof ExitEvent && previousEvent instanceof ExitEvent)) {
+                    (crossingType.equals("entry") && prevCrossingType.equals("entry")) ||
+                    (crossingType.equals("exit") && prevCrossingType.equals("exit"))) {
                 return false;
             }
             previousEvent = crossing;

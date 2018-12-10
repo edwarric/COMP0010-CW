@@ -20,4 +20,6 @@ public abstract class ZoneBoundaryCrossing {
     public LocalDateTime timestamp() {
         return time;
     }
+
+    public abstract String type();
 }
