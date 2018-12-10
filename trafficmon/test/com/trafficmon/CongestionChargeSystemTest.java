@@ -5,7 +5,6 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.time.LocalDateTime;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -32,7 +31,7 @@ public class CongestionChargeSystemTest {
     public void exitingUnregisteredVehiclesShouldBeIgnored() {
         assertTrue(CCSystem.getEventlog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
-        assertThat(CCSystem.getEventlog().size(), is(0));
+        assertTrue(CCSystem.getEventlog().isEmpty());
     }
     
     @Test
@@ -145,49 +144,4 @@ public class CongestionChargeSystemTest {
                 "vehicle: Vehicle [A123 XYZ]"));
     }
 
-    
-    static class ControllableClock implements Clock{
-
-        private LocalDateTime now;
-
-        @Override
-        public LocalDateTime now() {
-            return now;
-        }
-
-        ControllableClock() {
-            now = LocalDateTime.of(2018, 1, 1, 0, 0, 0);
-        }
-
-        void setYear(int year) {
-            now = now.withYear(year);
-        }
-
-        void setMonth(int month) {
-            now = now.withMonth(month);
-        }
-
-        void setDay(int day) {
-            now = now.withDayOfMonth(day);
-        }
-
-        void setHour(int hour) {
-            now = now.withHour(hour);
-        }
-
-        void setMin(int min) {
-            now = now.withMinute(min);
-        }
-
-        void setSec(int sec) {
-            now = now.withSecond(sec);
-        }
-    }
-    
-    private static void delayMinutes(int mins) throws InterruptedException {
-        delaySeconds(mins * 60);
-    }
-    private static void delaySeconds(int secs) throws InterruptedException {
-        Thread.sleep(secs * 1000);
-    }
 }

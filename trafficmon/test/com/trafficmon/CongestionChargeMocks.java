@@ -6,13 +6,14 @@ import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 public class CongestionChargeMocks {
     @Rule
     public JUnitRuleMockery context = new JUnitRuleMockery();
-    AccountsService accountsService = context.mock(AccountsService.class);
     PenaltiesService penaltiesService = context.mock(PenaltiesService.class);
 
     CongestionChargeSystem CCSystem = new CongestionChargeSystem();
@@ -20,39 +21,119 @@ public class CongestionChargeMocks {
     Account account = new Account("Fehed", Vehicle.withRegistration("A102 ABC"), new BigDecimal(0));
 
 
+    @Test
+    public void newEventShouldRegisterInLog(){
+        assertTrue(CCSystem.getEventlog().isEmpty());
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A123 XYZ"));
+        assertThat(CCSystem.getEventlog().size(), is(1));
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
+        assertThat(CCSystem.getEventlog().size(), is(2));
+    }
 
     @Test
-    public void vehicleEntryAndExitBefore2Within4Hours(){
+    public void exitingUnregisteredVehiclesShouldBeIgnored(){
+        assertTrue(CCSystem.getEventlog().isEmpty());
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"));
+        assertTrue(CCSystem.getEventlog().isEmpty());
+    }
+
+    @Test
+    public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock(){
+        assertTrue(CCSystem.getEventlog().isEmpty());
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
+        assertTrue(CCSystem.getEventlog().isEmpty());
+    }
+
+    @Test
+    public void unregisteredVehiclesShouldReceivePenaltyNotice(){
+        context.checking(new Expectations() {{
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("ASDFGHJK"), new BigDecimal(6));
+        }});
+
+        clock.setHour(9);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("ASDFGHJK"), clock);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("ASDFGHJK"), clock);
+        CCSystem.calculateCharges(penaltiesService);
+
+
+    }
+
+    @Test
+    public void registeredVehicleOverstays(){
+      context.checking(new Expectations() {{
+          exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(12));
+      }});
+      clock.setHour(9);
+      CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
+      clock.setHour(15);
+      CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+      CCSystem.calculateCharges(penaltiesService);
+    }
+
+    @Test
+    public void registeredVehicleRevisitsAndOverstays(){
+        context.checking(new Expectations() {{
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(18));
+        }});
+        clock.setHour(9);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(10);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(11);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(14);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+        CCSystem.calculateCharges(penaltiesService);
+    }
+
+    @Test
+    public void registeredVehicleVisitsAndLeavesBefore2(){
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
         }});
-        clock.currentTimeIs(1,9,00);
+        clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,10,00);
+        clock.setHour(10);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
         CCSystem.calculateCharges(penaltiesService);
     }
 
     @Test
-    public void vehicleEntryAndExitAfter2Within4Hours(){
+    public void registeredVehicleVisitsAndLeavesAfter2(){
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(4));
         }});
-        clock.currentTimeIs(1,15,00);
+        clock.setHour(15);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,18,00);
+        clock.setHour(18);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
         CCSystem.calculateCharges(penaltiesService);
     }
 
     @Test
-    public void vehicleExitAfter4Hours(){
+    public void registeredVehicleVisitsBeforeAndAfter2(){
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(12));
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(10));
         }});
-        clock.currentTimeIs(1,9,00);
+        clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,15,00);
+        clock.setHour(10);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(15);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(17);
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+        CCSystem.calculateCharges(penaltiesService);
+    }
+
+    @Test
+    public void notEnoughCreditShouldFacePenalty(){
+        context.checking(new Expectations() {{
+            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
+        }});
+        clock.setHour(9);
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
+        clock.setHour(10);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
         CCSystem.calculateCharges(penaltiesService);
     }
@@ -62,45 +143,25 @@ public class CongestionChargeMocks {
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(6));
         }});
-        clock.currentTimeIs(1,9,00);
+        clock.setHour(9);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,10,00);
+        clock.setHour(10);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,11,00);
+        clock.setHour(11);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,12,00);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
-        CCSystem.calculateCharges(penaltiesService);
-    }
-
-    @Test
-    public void vehicleReEnteredAndOverstayed(){
-        context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(18));
-        }});
-        clock.currentTimeIs(1,9,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,10,00);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,11,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,14,00);
+        clock.setHour(12);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
         CCSystem.calculateCharges(penaltiesService);
     }
 
     @Test
-    public void vehicleStaysBefore2AndAfter2(){
+    public void unorderedVehicleLogShouldTriggerInvestigation(){
         context.checking(new Expectations() {{
-            exactly(1).of(penaltiesService).issuePenaltyNotice(Vehicle.withRegistration("A102 ABC"), new BigDecimal(10));
+            exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
         }});
-        clock.currentTimeIs(1,9,00);
+        clock.setHour(13);
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,10,00);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,15,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,17,00);
+        clock.setHour(10);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
         CCSystem.calculateCharges(penaltiesService);
     }
@@ -110,31 +171,23 @@ public class CongestionChargeMocks {
         context.checking(new Expectations() {{
             exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
         }});
-        clock.currentTimeIs(1,13,00);
-        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"), clock);
-        clock.currentTimeIs(1,10,00);
-        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"), clock);
+
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
+        CCSystem.calculateCharges(penaltiesService);
+
+    }
+
+    @Test
+    public void duplicateVehicleExitShouldTriggerInvestigation(){
+        context.checking(new Expectations() {{
+            exactly(1).of(penaltiesService).triggerInvestigationInto(Vehicle.withRegistration("A102 ABC"));
+        }});
+
+        CCSystem.vehicleEnteringZone(Vehicle.withRegistration("A102 ABC"));
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"));
+        CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A102 ABC"));
         CCSystem.calculateCharges(penaltiesService);
     }
-
-
-    private class ControllableClock implements Clock{
-
-        private LocalDateTime now;
-
-        @Override
-        public LocalDateTime now() {
-            return now;
-        }
-
-        public void currentTimeIs(int day, int hour, int min){
-            now = LocalDateTime.of(0,1, day, hour, min,0,0);
-        }
-
-    }
-
-
-
-
 
 }
