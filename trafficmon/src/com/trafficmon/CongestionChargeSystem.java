@@ -97,10 +97,10 @@ public class CongestionChargeSystem {
     }
 
     private BigDecimal decideCharge(int time, BigDecimal charge) {
-        if(time < 14){
+        if(time < 14) {
             charge = charge.add(new BigDecimal(6));
         }
-        else{
+        else {
             charge = charge.add(new BigDecimal(4));
         }
         return charge;
@@ -119,9 +119,9 @@ public class CongestionChargeSystem {
     }
 
     private boolean checkOrderingOf(List<ZoneBoundaryCrossing> crossings) {
-        ZoneBoundaryCrossing previousEvent = crossings.get(0);
         String crossingType, prevCrossingType;
-
+        ZoneBoundaryCrossing previousEvent = crossings.get(0);
+        
         for (ZoneBoundaryCrossing crossing : crossings.subList(1, crossings.size())) {
             crossingType = crossing.type();
             prevCrossingType = previousEvent.type();

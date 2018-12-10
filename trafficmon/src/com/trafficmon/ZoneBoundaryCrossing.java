@@ -11,7 +11,6 @@ public abstract class ZoneBoundaryCrossing {
         this.vehicle = vehicle;
         this.time = clock.now();
     }
-    
 
     public Vehicle getVehicle() {
         return vehicle;

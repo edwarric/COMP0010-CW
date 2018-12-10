@@ -6,7 +6,7 @@ class ExitEvent extends ZoneBoundaryCrossing {
     }
 
     @Override
-    public String type(){
+    public String type() {
         return "exit";
     }
 }

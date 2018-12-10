@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 public class CongestionChargeMocks {
     @Rule
     public JUnitRuleMockery context = new JUnitRuleMockery();
-    PenaltiesService penaltiesService = context.mock(PenaltiesService.class);
+    private final PenaltiesService penaltiesService = context.mock(PenaltiesService.class);
 
-    CongestionChargeSystem CCSystem = new CongestionChargeSystem();
-    ControllableClock clock = new ControllableClock();
+    private final CongestionChargeSystem CCSystem = new CongestionChargeSystem();
+    private final ControllableClock clock = new ControllableClock();
     Account account = new Account("Fehed", Vehicle.withRegistration("A102 ABC"), new BigDecimal(0));
 
     @Test

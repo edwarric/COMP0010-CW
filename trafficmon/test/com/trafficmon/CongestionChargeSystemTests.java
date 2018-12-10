@@ -13,10 +13,10 @@ import static org.hamcrest.CoreMatchers.is;
 
 public class CongestionChargeSystemTests {
 
-    private CongestionChargeSystem CCSystem = new CongestionChargeSystem();
-    private ControllableClock clock = new ControllableClock();
-    private OutputStream os = new ByteArrayOutputStream();
-    private PrintStream ps = new PrintStream(os);
+    private final CongestionChargeSystem CCSystem = new CongestionChargeSystem();
+    private final ControllableClock clock = new ControllableClock();
+    private final OutputStream os = new ByteArrayOutputStream();
+    private final PrintStream ps = new PrintStream(os);
 
     @Test
     public void newEventShouldRegisterInLog() {
