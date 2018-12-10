@@ -78,13 +78,13 @@ public class CongestionChargeSystem {
 
     private BigDecimal calculateChargeForTimeInZone(List<ZoneBoundaryCrossing> crossings) {
         BigDecimal charge = new BigDecimal(0);
-        
+
         LocalDateTime returnBeforeTime = LocalDateTime.of(0,1,1,0,0);
         LocalDateTime entryTime = null, exitTime;
         boolean canReturnForFree = false;
-        
+
         for (ZoneBoundaryCrossing crossing : crossings) {
-    
+
             if (crossing instanceof EntryEvent) {
                 entryTime = crossing.timestamp();
                 if (!earlierThan(entryTime, returnBeforeTime)) {
@@ -109,7 +109,7 @@ public class CongestionChargeSystem {
         }
         return charge;
     }
-    
+
     private boolean earlierThan(LocalDateTime t1, LocalDateTime t2) {
         if (t1.compareTo(t2) < 0) {
             return true;
