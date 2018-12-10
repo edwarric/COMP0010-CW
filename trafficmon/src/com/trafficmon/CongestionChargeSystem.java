@@ -1,14 +1,10 @@
 package com.trafficmon;
 
 import java.math.BigDecimal;
-import java.rmi.registry.LocateRegistry;
 import java.time.LocalDateTime;
 import java.util.*;
-import static java.time.temporal.ChronoUnit.*;
 
 public class CongestionChargeSystem {
-
-    public static final BigDecimal CHARGE_RATE_POUNDS_PER_MINUTE = new BigDecimal(0.05);
 
     private final List<ZoneBoundaryCrossing> eventLog = new ArrayList<ZoneBoundaryCrossing>();
     //is a list of vehicles and their timestamps (entry/exit)
@@ -45,7 +41,7 @@ public class CongestionChargeSystem {
         return eventLog;
     }
 
-    public void calculateCharges() {
+    public void calculateCharges(PenaltiesService penaltiesService) {
 
         Map<Vehicle, List<ZoneBoundaryCrossing>> crossingsByVehicle = new HashMap<Vehicle, List<ZoneBoundaryCrossing>>();
 
@@ -67,7 +63,7 @@ public class CongestionChargeSystem {
             List<ZoneBoundaryCrossing> crossings = vehicleCrossings.getValue();
 
             if (!checkOrderingOf(crossings)) {
-                OperationsTeam.getInstance().triggerInvestigationInto(vehicle);
+                penaltiesService.triggerInvestigationInto(vehicle);
             } else {
                 //calls calculation function
                 BigDecimal charge = calculateChargeForTimeInZone(crossings);
@@ -75,7 +71,7 @@ public class CongestionChargeSystem {
                 try {
                     RegisteredCustomerAccountsService.getInstance().accountFor(vehicle).deduct(charge);
                 } catch (InsufficientCreditException | AccountNotRegisteredException e){
-                    OperationsTeam.getInstance().issuePenaltyNotice(vehicle, charge); }
+                    penaltiesService.issuePenaltyNotice(vehicle, charge); }
             }
         }
     }

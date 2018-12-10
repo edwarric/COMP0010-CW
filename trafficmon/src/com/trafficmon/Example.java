@@ -10,7 +10,7 @@ public class Example {
         congestionChargeSystem.vehicleLeavingZone(Vehicle.withRegistration("J091 4PY"));
         delayMinutes(1);
         congestionChargeSystem.vehicleLeavingZone(Vehicle.withRegistration("A123 XYZ"));
-        congestionChargeSystem.calculateCharges();
+        congestionChargeSystem.calculateCharges(OperationsTeam.getInstance());
     }
     private static void delayMinutes(int mins) throws InterruptedException {
         delaySeconds(mins * 60);
