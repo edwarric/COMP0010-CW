@@ -38,7 +38,7 @@ public class CongestionChargeSystemTests {
     public void exitingUnregisteredVehiclesShouldBeIgnoredUsingClock() {
         assertTrue(CCSystem.getEventLog().isEmpty());
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("A987 XYZ"), clock);
-        assertThat(CCSystem.getEventLog().size(), is(0));
+        assertTrue(CCSystem.getEventLog().isEmpty());
     }
     
     @Test
