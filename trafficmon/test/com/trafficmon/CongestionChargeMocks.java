@@ -52,8 +52,6 @@ public class CongestionChargeMocks {
         CCSystem.vehicleEnteringZone(Vehicle.withRegistration("ASDFGHJK"), clock);
         CCSystem.vehicleLeavingZone(Vehicle.withRegistration("ASDFGHJK"), clock);
         CCSystem.calculateCharges(penaltiesService);
-
-
     }
 
     @Test
